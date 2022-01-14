@@ -5,8 +5,8 @@
     "name": "flask-python-poc",
     "annotations": {
       "openshift.io/display-name": "Flask APP",
-      "description": "An example Apache HTTP Server (httpd) application that serves static content. For more information about using this template, including OpenShift considerations, see https://github.com/sclorg/httpd-ex/blob/master/README.md.",
-      "tags": "quickstart,httpd",
+      "description": "A basic flask application.",
+      "tags": "python,flask",
       "iconClass": "icon-python",
       "template.openshift.io/bindable": "false"
     }
