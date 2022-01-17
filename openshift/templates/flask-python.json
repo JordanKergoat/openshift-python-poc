@@ -41,7 +41,7 @@
         "source": {
           "type": "Git",
           "git": {
-            "uri": "https://github.com/JordanKergoat/openshift-python-poc.git"
+            "uri": "${REPOSITORY_URL}"
           }
         },
         "strategy": {
@@ -55,6 +55,131 @@
             "kind": "ImageStreamTag",
             "name": "${NAME}:latest"
           }
+        },
+        "triggers": [
+          {
+            "type": "GitHub",
+            "github": {
+              "secret": "${GITHUB_WEBHOOK_SECRET}"
+            }
+          }
+        ]
+      }
+    },    
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "apps.openshift.io/v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "Defines how to deploy the application server",
+          "template.alpha.openshift.io/wait-for-ready": "true"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling"
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${NAME}"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${NAME}:latest"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "name": "${NAME}"
+        },
+        "template": {
+          "metadata": {
+            "name": "${NAME}",
+            "labels": {
+              "name": "${NAME}"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "${NAME}",
+                "image": "${NAME}",
+                "ports": [
+                  {
+                    "containerPort": 5000
+                  }
+                ],
+                "readinessProbe": {
+                  "timeoutSeconds": 3,
+                  "initialDelaySeconds": 3,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 5000
+                  }
+                },
+                "livenessProbe": {
+                    "timeoutSeconds": 3,
+                    "initialDelaySeconds": 30,
+                    "httpGet": {
+                        "path": "/",
+                        "port": 5000
+                    }
+                },
+                "env": [
+                  {
+                    "name": "APP_NAME",
+                    "value": "${NAME}"
+                  }
+                ]
+             }
+            ]
+          }
+        }
+      }
+    },    
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "Exposes and load balances the application pods"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "web",
+            "port": 5000,
+            "targetPort": 5000
+          }
+        ],
+        "selector": {
+          "name": "${NAME}"
+        }
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "route.openshift.io/v1",
+      "metadata": {
+        "name": "${NAME}"
+      },
+      "spec": {
+        "host": "${NAME}.jke-poc.com",
+        "to": {
+          "kind": "Service",
+          "name": "${NAME}"
         }
       }
     }
@@ -65,7 +190,21 @@
       "displayName": "Name",
       "description": "The name assigned to all of the frontend objects defined in this template.",
       "required": true,
-      "value": "httpd-example"
+      "value": "flask-jke-poc"
+    },
+    {
+      "name": "REPOSITORY_URL",
+      "displayName": "Repository Url",
+      "description": "The name assigned to all of the frontend objects defined in this template.",
+      "required": true,
+      "value": "https://github.com/JordanKergoat/openshift-python-poc.git"
+    },
+    {
+      "name": "GITHUB_WEBHOOK_SECRET",
+      "displayName": "GitHub Webhook Secret",
+      "description": "Github trigger secret.  A difficult to guess string encoded as part of the webhook URL.  Not encrypted.",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{40}"
     }
   ]
 }
