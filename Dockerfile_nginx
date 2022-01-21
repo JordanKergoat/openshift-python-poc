@@ -15,4 +15,4 @@ COPY filebeat/nginx.yml /etc/filebeat/modules.d/nginx.yml
 
 USER nginx
 
-CMD service filebeat start && nginx -g daemon off
+ENTRYPOINT service filebeat start && /bin/sh -c
