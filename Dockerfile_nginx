@@ -6,7 +6,7 @@ USER root
 
 RUN curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.16.3-amd64.deb
 
-RUN sudo dpkg -i filebeat-7.16.3-amd64.deb
+RUN dpkg -i filebeat-7.16.3-amd64.deb
 
 RUN filebeat modules enable nginx
 
