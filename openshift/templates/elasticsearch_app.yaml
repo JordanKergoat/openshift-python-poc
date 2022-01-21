@@ -1,0 +1,28 @@
+--- 
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata: 
+  name: "elastic"
+spec: 
+  replicas: 1
+  selector: 
+    name: elastic
+  strategy: 
+    type: Rolling
+  template: 
+    metadata: 
+      labels: 
+        name: elastic
+      name: elastic
+    spec: 
+      containers: 
+        - 
+          env: 
+            - 
+              name: discovery.type
+              value: single-node
+          image: "elasticsearch:7.16.3"
+          name: elastic
+          ports: 
+            - 
+              containerPort: 9200

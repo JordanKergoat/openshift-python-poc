@@ -1,0 +1,109 @@
+{
+  "kind": "Template",
+  "apiVersion": "template.openshift.io/v1",
+  "metadata": {
+    "name": "flask-python-poc",
+    "annotations": {
+      "openshift.io/display-name": "Flask APP",
+      "description": "A basic flask application.",
+      "tags": "python,flask",
+      "iconClass": "icon-python",
+      "template.openshift.io/bindable": "false"
+    }
+  },
+  "message": "A message",
+  "labels": {
+      "template": "flask-python-poc",
+      "app": "flask-python-poc"
+  },
+  "objects": [
+    {
+      "kind": "ImageStream",
+      "apiVersion": "image.openshift.io/v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "Keeps track of changes in the application image"
+        }
+      }
+    },
+    {
+      "kind": "BuildConfig",
+      "apiVersion": "build.openshift.io/v1",
+      "metadata": {
+        "name": "${NAME}-flask",
+        "annotations": {
+          "description": "Defines how to build the application",
+          "template.alpha.openshift.io/wait-for-ready": "true"
+        }
+      },
+      "spec": {
+        "source": {
+          "type": "Git",
+          "git": {
+            "uri": "${REPOSITORY_URL}"
+          }
+        },
+        "strategy": {
+          "type": "Docker",
+          "dockerStrategy": {
+            "dockerfilePath": "Dockerfile_flask"
+          }
+        },
+        "output": {
+          "to": {
+            "kind": "ImageStreamTag",
+            "name": "${NAME}-flask:latest"
+          }
+        }
+      }
+    },
+    {
+      "kind": "BuildConfig",
+      "apiVersion": "build.openshift.io/v1",
+      "metadata": {
+        "name": "${NAME}-nginx",
+        "annotations": {
+          "description": "Defines how to build the application",
+          "template.alpha.openshift.io/wait-for-ready": "true"
+        }
+      },
+      "spec": {
+        "source": {
+          "type": "Git",
+          "git": {
+            "uri": "${REPOSITORY_URL}"
+          }
+        },
+        "strategy": {
+          "type": "Docker",
+          "dockerStrategy": {
+            "dockerfilePath": "Dockerfile_nginx"
+          }
+        },
+        "output": {
+          "to": {
+            "kind": "ImageStreamTag",
+            "name": "${NAME}-nginx:latest"
+          }
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "NAME",
+      "displayName": "Name",
+      "description": "The name assigned to all of the frontend objects defined in this template.",
+      "required": true,
+      "value": "flask-jke-poc"
+    },
+    {
+      "name": "REPOSITORY_URL",
+      "displayName": "Repository Url",
+      "description": "The name assigned to all of the frontend objects defined in this template.",
+      "required": true,
+      "value": "https://github.com/JordanKergoat/openshift-python-poc.git"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+FROM python:3.10.1-alpine3.15
+
+RUN apk add apache2 apache2-mod-wsgi
+
+RUN pip install flask
+
+RUN mkdir -p /home/app ; rm /etc/apache2/conf.d/*
+
+COPY __init__.py /home/app/__init__.py
+COPY flask.wsgi /home/flask.wsgi
+COPY flask.conf /etc/apache2/conf.d/flask.conf
+
+RUN chown apache:apache /home/flask.wsgi ; \
+    chown -R apache:apache /home/app
+
+ENV FLASK_APP /home/app
+
+EXPOSE 80
+
+CMD httpd -DFOREGROUND

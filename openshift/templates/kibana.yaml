@@ -1,0 +1,54 @@
+--- 
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata: 
+  name: "kibana"
+spec: 
+  replicas: 1
+  selector: 
+    name: kibana
+  strategy: 
+    type: Rolling
+  template: 
+    metadata: 
+      labels: 
+        name: kibana
+      name: kibana
+    spec: 
+      containers: 
+        - 
+          env: 
+            - 
+              name: ELASTICSEARCH_HOSTS
+              value: http://elastic:9200/
+          image: "kibana:7.16.3"
+          name: kibana
+          ports: 
+            - 
+              containerPort: 5601
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: kibana
+  annotations:
+    description: Exposes and load balances the application pods
+spec:
+  ports:
+    - name: web
+      port: 5601
+      targetPort: 5601
+  selector:
+    name: kibana
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: kibana
+spec:
+  host: kibana.jke-poc.com
+  to:
+    kind: Service
+    name: kibana
+
+

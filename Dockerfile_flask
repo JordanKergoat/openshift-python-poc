@@ -1,0 +1,17 @@
+FROM python:3.10.1-alpine3.15
+
+RUN apk add python3-dev build-base linux-headers pcre-dev
+
+RUN pip install flask uwsgi
+
+RUN mkdir -p /home/app 
+
+COPY __init__.py /home/app/__init__.py
+COPY flask.wsgi /home/flask.wsgi
+COPY flask.conf /etc/apache2/conf.d/flask.conf
+
+ENV FLASK_APP /home/app
+
+EXPOSE 80 3031
+
+CMD uwsgi --socket 0.0.0.0:3031 --wsgi-file /home/app/__init__.py  --callable app --processes 4 --threads 2 --stats 0.0.0.0:80

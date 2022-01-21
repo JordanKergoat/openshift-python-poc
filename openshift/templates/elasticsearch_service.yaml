@@ -1,0 +1,15 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: elastic
+  annotations:
+    description: Exposes and load balances the application pods
+spec:
+  ports:
+    - name: web
+      port: 9200
+      targetPort: 9200
+  selector:
+    name: elastic
+

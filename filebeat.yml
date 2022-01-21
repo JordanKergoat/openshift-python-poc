@@ -1,0 +1,13 @@
+output.elasticsearch:
+  hosts: ["elastic.jke-poc.com:80"]
+
+
+filebeat.inputs:
+- type: filestream
+  paths:
+    - /Users/jordan/workspace/openshift/openshift-python-poc/toto.log
+  processors:
+    - dissect:
+        tokenizer: '%{httpd.status_code|integer} - %{uri} - %{httpd.ellapsed_time|integer}'
+        field: "message"
+        target_prefix: ""

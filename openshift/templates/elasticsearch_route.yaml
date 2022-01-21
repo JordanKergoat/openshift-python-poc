@@ -1,0 +1,10 @@
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: elastic
+spec:
+  host: elastic.jke-poc.com
+  to:
+    kind: Service
+    name: elastic
