@@ -21,9 +21,19 @@
       "kind": "ImageStream",
       "apiVersion": "image.openshift.io/v1",
       "metadata": {
-        "name": "${NAME}",
+        "name": "${NAME}-flask",
         "annotations": {
-          "description": "Keeps track of changes in the application image"
+          "description": "Flask app based on uwsgi"
+        }
+      }
+    },
+    {
+      "kind": "ImageStream",
+      "apiVersion": "image.openshift.io/v1",
+      "metadata": {
+        "name": "${NAME}-nginx",
+        "annotations": {
+          "description": "Nginx front proxing to uwsgi"
         }
       }
     },
@@ -86,6 +96,220 @@
             "kind": "ImageStreamTag",
             "name": "${NAME}-nginx:latest"
           }
+        }
+      }
+    },    
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "apps.openshift.io/v1",
+      "metadata": {
+        "name": "${NAME}-flask",
+        "annotations": {
+          "description": "Defines how to deploy the application server",
+          "template.alpha.openshift.io/wait-for-ready": "true"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling"
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${NAME}-flask"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${NAME}-flask:latest"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "name": "${NAME}-flask"
+        },
+        "template": {
+          "metadata": {
+            "name": "${NAME}-flask",
+            "labels": {
+              "name": "${NAME}-flask"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "${NAME}-flask",
+                "image": "${NAME}-flask",
+                "ports": [
+                  {
+                    "containerPort": 3031
+                  }
+                ],
+                "readinessProbe": {
+                  "timeoutSeconds": 3,
+                  "initialDelaySeconds": 3,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 3031
+                  }
+                },
+                "livenessProbe": {
+                    "timeoutSeconds": 3,
+                    "initialDelaySeconds": 30,
+                    "httpGet": {
+                        "path": "/",
+                        "port": 3031
+                    }
+                },
+                "env": [
+                  {
+                    "name": "APP_NAME",
+                    "value": "${NAME}"
+                  }
+                ]
+             }
+            ]
+          }
+        }
+      }
+    },    
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "apps.openshift.io/v1",
+      "metadata": {
+        "name": "${NAME}-nginx",
+        "annotations": {
+          "description": "Defines how to deploy the application server",
+          "template.alpha.openshift.io/wait-for-ready": "true"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling"
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${NAME}-nginx"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${NAME}-nginx:latest"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "name": "${NAME}-nginx"
+        },
+        "template": {
+          "metadata": {
+            "name": "${NAME}-nginx",
+            "labels": {
+              "name": "${NAME}-nginx"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "${NAME}-nginx",
+                "image": "${NAME}-nginx",
+                "ports": [
+                  {
+                    "containerPort": 80
+                  }
+                ],
+                "readinessProbe": {
+                  "timeoutSeconds": 3,
+                  "initialDelaySeconds": 3,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 80
+                  }
+                },
+                "livenessProbe": {
+                    "timeoutSeconds": 3,
+                    "initialDelaySeconds": 30,
+                    "httpGet": {
+                        "path": "/",
+                        "port": 80
+                    }
+                }
+             }
+            ]
+          }
+        }
+      }
+    },   
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "flask",
+        "annotations": {
+          "description": "Exposes and load balances the application pods"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "web",
+            "port": 3031,
+            "targetPort": 3031
+          }
+        ],
+        "selector": {
+          "name": "${NAME}-flask"
+        }
+      }
+    },   
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "nginx",
+        "annotations": {
+          "description": "Exposes and load balances the application pods"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "web",
+            "port": 80,
+            "targetPort": 80
+          }
+        ],
+        "selector": {
+          "name": "${NAME}-nginx"
+        }
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "route.openshift.io/v1",
+      "metadata": {
+        "name": "${NAME}"
+      },
+      "spec": {
+        "host": "${NAME}.jke-poc.com",
+        "to": {
+          "kind": "Service",
+          "name": "nginx"
         }
       }
     }
