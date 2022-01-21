@@ -13,6 +13,4 @@ RUN filebeat modules enable nginx
 COPY filebeat/filebeat.yml /etc/filebeat/filebeat.yml
 COPY filebeat/nginx.yml /etc/filebeat/modules.d/nginx.yml
 
-USER nginx
-
-ENTRYPOINT service filebeat start && /bin/sh -c
+COPY docker-entrypoint.sh /
